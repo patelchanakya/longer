@@ -4,9 +4,8 @@ import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
-// post function is called when the user submits the button
+// post function is called when the user submits the button 
 // takes the request object as parameter 
-// 
 export async function POST(request: Request) {
   const requestUrl = new URL(request.url)
   // createRouteHandlerClient is a function that takes the cookies to create a supabase client using nextjs auth helpers 
@@ -20,6 +19,8 @@ export async function POST(request: Request) {
         access_type: 'offline',
         prompt: 'consent',
       },
+      // redirect to the callback route after the user signs in
+      // be sure to add in google console as a authorized redirect uri 
       redirectTo: `${requestUrl.origin}/auth/callback`,
     },
   })
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     )
   }
 
-  console.log(data)
+  // explain what this does
   return NextResponse.redirect(data.url, {
     // a 301 status is required to redirect from a POST to a GET route
     status: 301,
