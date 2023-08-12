@@ -4,6 +4,7 @@ import Link from 'next/link'
 import LogoutButton from '../components/LogoutButton'
 import SupabaseLogo from '../components/SupabaseLogo'
 import NextJsLogo from '../components/NextJsLogo'
+import LoginButton from '../components/LoginButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,16 +54,18 @@ export default async function Index() {
           <div>
             {user ? (
               <div className="flex items-center gap-4">
-                Hey, {user.email}!
+                Hey, {user.email}!!!!
                 <LogoutButton />
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="py-2 px-4 rounded-md no-underline bg-btn-background hover:bg-btn-background-hover"
-              >
-                Login
-              </Link>
+              // child component for google auth login
+              // <Link
+              //   href="/login"
+              //   className="py-2 px-4 rounded-md no-underline bg-btn-background hover:bg-btn-background-hover"
+              // >
+              //   Login
+              // </Link>
+              <LoginButton/>
             )}
           </div>
         </div>

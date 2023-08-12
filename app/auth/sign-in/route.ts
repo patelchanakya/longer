@@ -4,21 +4,33 @@ import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
+// post function is called when the user submits the button
+// takes the request object as parameter 
+// 
 export async function POST(request: Request) {
   const requestUrl = new URL(request.url)
-  const formData = await request.formData()
-  const email = String(formData.get('email'))
-  const password = String(formData.get('password'))
+  // createRouteHandlerClient is a function that takes the cookies to create a supabase client using nextjs auth helpers 
   const supabase = createRouteHandlerClient({ cookies })
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+  
+  // calls the signInWithOAuth method with supabase.auth object specifying the google provider and options
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+      redirectTo: `${requestUrl.origin}/auth/callback`,
+    },
   })
 
+
   if (error) {
+
     return NextResponse.redirect(
+      
       `${requestUrl.origin}/login?error=Could not authenticate user`,
+      
       {
         // a 301 status is required to redirect from a POST to a GET route
         status: 301,
@@ -26,7 +38,8 @@ export async function POST(request: Request) {
     )
   }
 
-  return NextResponse.redirect(requestUrl.origin, {
+  console.log(data)
+  return NextResponse.redirect(data.url, {
     // a 301 status is required to redirect from a POST to a GET route
     status: 301,
   })
