@@ -2,11 +2,9 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import LogoutButton from "../components/LogoutButton";
-import SupabaseLogo from "../components/SupabaseLogo";
-import NextJsLogo from "../components/NextJsLogo";
+
 import LoginButton from "../components/LoginButton";
-import { Input } from "@/components/ui/ui/input";
-import { Label } from "@/components/ui/ui/label";
+import Uploader from "../components/Uploader";
 
 export const dynamic = "force-dynamic";
 
@@ -48,8 +46,10 @@ export default async function Index() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  console.log();
   return (
     <div className="w-full flex flex-col items-center">
+      {/* navigation */}
       <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
         <div className="w-full max-w-4xl flex justify-between items-center p-3 text-sm text-foreground">
           <div />
@@ -67,35 +67,27 @@ export default async function Index() {
         </div>
       </nav>
 
-      <div className="animate-in flex flex-col gap-14 opacity-0 max-w-4xl px-3 py-16 lg:py-24 text-foreground">
-        <div className="flex flex-col items-center mb-4 lg:mb-12">
-          <p className="text-6xl font-bold lg:text-4xl !leading-tight mx-auto max-w-xl text-center">
+      {/* header */}
+      <div className="animate-in flex flex-col items-center gap-8 opacity-0 max-w-4xl px-3 py-10 lg:py-15 text-foreground">
+        <div className="flex flex-col items-center mb-2 lg:mb-4">
+          <p className="text-6xl font-bold lg:text-6xl !leading-tight mx-auto max-w-xl text-center">
             Extend your music with generative AI
           </p>
-          <p className="text-1xl lg:text-4xl !leading-tight mx-auto max-w-xl text-center mb-12">
+          <p className="text-xl lg:text-3xl !leading-tight mx-auto max-w-xl text-center mb-5 ">
             Upload your unique music piece, and let our system take care of the
             rest. Our platform can generate fresh and inspiring music that
             seamlessly continues your original work.
           </p>
-          <div className="bg-foreground py-3 px-6 rounded-lg font-mono text-sm text-background">
-            <button className="mb-2">
-              <Link href="/upload">Upload your song</Link>
-            </button>
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Input id="picture" type="file" />
-              <Label htmlFor="picture">.wav or .mp3</Label>
-            </div>
-          </div>
         </div>
 
-        {/* create upload component */}
-        <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+        <Uploader />
 
         <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
 
         <div className="flex flex-col gap-8 text-foreground">
           <h2 className="text-lg font-bold text-center">Your Files </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+          {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {resources.map(({ title, subtitle, url, icon }) => (
               <a
                 key={title}
@@ -145,10 +137,10 @@ export default async function Index() {
                 </div>
               </a>
             ))}
-          </div>
+          </div> */}
         </div>
 
-        <div className="flex flex-col gap-8 text-foreground">
+        {/* <div className="flex flex-col gap-8 text-foreground">
           <>
             {user ? (
               <div className="flex items-center gap-4">
@@ -183,7 +175,7 @@ export default async function Index() {
               </div>
             )}
           </>
-        </div>
+        </div> */}
 
         <div className="flex justify-center text-center text-xs">
           <p>

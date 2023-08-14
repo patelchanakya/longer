@@ -40,3 +40,53 @@
     transform: translateY(0);
   }
 }
+
+@keyframes rainbow-shine {
+  0% {
+    background: linear-gradient(
+      45deg,
+      #ff0000,
+      #ff8000,
+      #ffff00,
+      #00ff00,
+      #0000ff,
+      #8b00ff,
+      #ff00ff
+    );
+    background-size: 600% 600%;
+    animation-timing-function: linear;
+    animation-duration: 10s;
+    animation-iteration-count: infinite;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+.hover.rainbow-shine:hover {
+  animation-name: rainbow-shine;
+}
+
+/* customs */
+.btn {
+  font-size: 16px;
+  text-align: center;
+
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 50px;
+  background: linear-gradient(-45deg, #ffa63d, #ff3d77, #338aff, #3cf0c5);
+  background-size: 600%;
+  animation: anime 16s linear infinite;
+}
+
+@keyframes anime {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
