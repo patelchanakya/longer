@@ -90,3 +90,33 @@
     background-position: 0% 50%;
   }
 }
+@keyframes rainbow-text {
+  0% {
+    color: red;
+  }
+  20% {
+    color: orange;
+  }
+  40% {
+    color: yellow;
+  }
+  60% {
+    color: green;
+  }
+  80% {
+    color: blue;
+  }
+  90% {
+    color: violet;
+  }
+  100% {
+    color: rgb(255, 0, 34);
+  }
+}
+
+.btn2 {
+  color: #0000ff;
+  animation: rainbow-text 13s linear infinite;
+  background-color: transparent;
+  font-weight: bold;
+}

@@ -8,176 +8,118 @@ import Uploader from "../components/Uploader";
 
 export const dynamic = "force-dynamic";
 
-const resources = [
-  {
-    title: "Cookie-based Auth and the Next.js App Router",
-    subtitle:
-      "This free course by Jon Meyers, shows you how to configure Supabase Auth to use cookies, and steps through some common patterns.",
-    url: "https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF",
-    icon: "M7 4V20M17 4V20M3 8H7M17 8H21M3 12H21M3 16H7M17 16H21M4 20H20C20.5523 20 21 19.5523 21 19V5C21 4.44772 20.5523 4 20 4H4C3.44772 4 3 4.44772 3 5V19C3 19.5523 3.44772 20 4 20Z",
-  },
-  {
-    title: "Supabase Next.js App Router Example",
-    subtitle:
-      "Want to see a code example containing some common patterns with Next.js and Supabase? Check out this repo!",
-    url: "https://github.com/supabase/supabase/tree/master/examples/auth/nextjs",
-    icon: "M10 20L14 4M18 8L22 12L18 16M6 16L2 12L6 8",
-  },
-  {
-    title: "Supabase Auth Helpers Docs",
-    subtitle:
-      "This template has configured Supabase Auth to use cookies for you, but the docs are a great place to learn more.",
-    url: "https://supabase.com/docs/guides/auth/auth-helpers/nextjs",
-    icon: "M12 6.25278V19.2528M12 6.25278C10.8321 5.47686 9.24649 5 7.5 5C5.75351 5 4.16789 5.47686 3 6.25278V19.2528C4.16789 18.4769 5.75351 18 7.5 18C9.24649 18 10.8321 18.4769 12 19.2528M12 6.25278C13.1679 5.47686 14.7535 5 16.5 5C18.2465 5 19.8321 5.47686 21 6.25278V19.2528C19.8321 18.4769 18.2465 18 16.5 18C14.7535 18 13.1679 18.4769 12 19.2528",
-  },
-];
+import { Stripe, loadStripe } from "@stripe/stripe-js";
 
-const examples = [
-  { type: "Client Components", src: "app/_examples/client-component/page.tsx" },
-  { type: "Server Components", src: "app/_examples/server-component/page.tsx" },
-  { type: "Server Actions", src: "app/_examples/server-action/page.tsx" },
-  { type: "Route Handlers", src: "app/_examples/route-handler.ts" },
-];
+// dummy data
+// import { NextStripePricingTable } from "../lib/checkoutstripe";
+
+// import {} from "../lib/checkoutstripe";
+
+declare global {
+  export namespace JSX {
+    interface IntrinsicElements {
+      "stripe-pricing-table": {
+        "pricing-table-id": string;
+        "publishable-key": string;
+        "client-reference-id"?: string;
+      };
+    }
+  }
+}
 
 export default async function Index() {
   const supabase = createServerComponentClient({ cookies });
 
+  // Get the user's session if there is one
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log();
+  // // Load Stripe for the buy credits button
+  // const stripe = await loadStripe(
+  //   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+  // );
+
   return (
     <div className="w-full flex flex-col items-center">
       {/* navigation */}
+
       <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-        <div className="w-full max-w-4xl flex justify-between items-center p-3 text-sm text-foreground">
-          <div />
+        <div className="w-full max-w-4xl flex  justify-between gap-5 items-center p-3 text-sm text-foreground">
+          <p className="text-blue text-xs ml-2">
+            You have <a className="font-bold underline">10 Credits</a>
+          </p>
+
           <div>
             {user ? (
               <div className="flex items-center gap-4">
-                user.cedits
-                {user.email}
+                <p className="font-bold">
+                  Welcome {user.email && user.email.split("@")[0]}!
+                </p>
                 <LogoutButton />
               </div>
             ) : (
-              <LoginButton />
+              <LoginButton buttonText="Login" />
             )}
           </div>
         </div>
       </nav>
 
       {/* header */}
-      <div className="animate-in flex flex-col items-center gap-8 opacity-0 max-w-4xl px-3 py-10 lg:py-15 text-foreground">
+      <div className="animate-in flex flex-col items-center gap-3 opacity-0 max-w-4xl px-3 py-10 lg:py-14 text-foreground">
         <div className="flex flex-col items-center mb-2 lg:mb-4">
-          <p className="text-6xl font-bold lg:text-6xl !leading-tight mx-auto max-w-xl text-center">
+          <p className="btn2 font-bold text-6xl font-bold lg:text-6xl !leading-tight mx-auto max-w-xl text-center">
             Extend your music with generative AI
           </p>
-          <p className="text-xl lg:text-3xl !leading-tight mx-auto max-w-xl text-center mb-5 ">
+          <p className="text-l lg:text-2xl !leading-tight mx-auto max-w-xl text-center mb-5 ">
             Upload your unique music piece, and let our system take care of the
             rest. Our platform can generate fresh and inspiring music that
             seamlessly continues your original work.
           </p>
         </div>
 
-        <Uploader />
+        {/* pass user  */}
+        <Uploader userstat={user} />
+
+        {/* resources */}
+
+        {user && (
+          <div className="flex items-center flex-col  max-w-xl gap-4 text-foreground">
+            <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+            <h2 className="text-xl font-bold font-bold text-center">
+              Your Files
+            </h2>
+            {/* render loading audio */}
+            [file list]
+          </div>
+        )}
+
+        <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+        <div className="flex flex-col !leading-tight mx-auto max-w-xl text-center text-foreground">
+          <h2
+            className="text-2xl font-bold underline text-center"
+            style={{ color: "rgb(238, 193, 189)" }}
+          >
+            Pricing
+          </h2>
+          <p>
+            100% Satisfaction guaranteed, if you are not happy with your
+            generation, please{" "}
+            <Link href="https://twitter.com/chanakyeah">contact us</Link> and we
+            will try our best to help you.
+          </p>
+        </div>
+        <div>
+          <stripe-pricing-table
+            pricing-table-id="prctbl_1NfLVnHwqkDf8yjhBWL8n3aI"
+            publishable-key="pk_live_51HF1l0HwqkDf8yjhv3Bd6RIXHcMp1GlbYVdzKSQsKy81PiOKP9X2TVue3rG3mZXpfi5sC8uLM4wWtci9vM4EOoof00BmTCAPOj"
+          ></stripe-pricing-table>
+        </div>
 
         <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
 
-        <div className="flex flex-col gap-8 text-foreground">
-          <h2 className="text-lg font-bold text-center">Your Files </h2>
-
-          {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {resources.map(({ title, subtitle, url, icon }) => (
-              <a
-                key={title}
-                className="relative flex flex-col group rounded-lg border p-6 hover:border-foreground"
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <h3 className="font-bold mb-2  min-h-[40px] lg:min-h-[60px]">
-                  {title}
-                </h3>
-                <div className="flex flex-col grow gap-4 justify-between">
-                  <p className="text-sm opacity-70">{subtitle}</p>
-                  <div className="flex justify-between items-center">
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="opacity-80 group-hover:opacity-100"
-                    >
-                      <path
-                        d={icon}
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="ml-2 h-4 w-4 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all"
-                    >
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div> */}
-        </div>
-
-        {/* <div className="flex flex-col gap-8 text-foreground">
-          <>
-            {user ? (
-              <div className="flex items-center gap-4">
-                <div className="grid gap-2 justify-center mx-auto text-center">
-                  <h2 className="text-lg font-bold text-center">Examples</h2>
-                  <p className="text-sm">
-                    Look in the <code>_examples</code> folder to see how to
-                    create a Supabase client in all the different contexts.
-                  </p>
-                </div>
-                {user.email}
-                {user.email}
-                {user.email}
-                {user.email}
-                {user.email}
-              </div>
-            ) : (
-              <div className="w-full justify-center border rounded-lg overflow-hidden">
-                {examples.map(({ type, src }) => (
-                  <div
-                    key={type}
-                    className="w-full grid grid-cols-3 border-b last:border-b-0 text-sm"
-                  >
-                    <div className="flex items-center font-bold p-4 min-h-12 w-full">
-                      {type}
-                    </div>
-                    <div className="col-span-2 border-l p-4 flex items-center">
-                      <code className="text-sm whitespace-pre-wrap">{src}</code>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        </div> */}
-
-        <div className="flex justify-center text-center text-xs">
+        {/* created by / credits */}
+        <div className="flex flex-col justify-center text-center text-xs">
           <p>
             Created by{" "}
             <Link
@@ -186,6 +128,16 @@ export default async function Index() {
               className="font-bold"
             >
               @chanakyeah
+            </Link>
+          </p>
+          <p>
+            Powered by{" "}
+            <Link
+              href="https://arxiv.org/abs/2306.05284"
+              target="_blank"
+              className="font-bold"
+            >
+              FacebookResearch
             </Link>
           </p>
         </div>

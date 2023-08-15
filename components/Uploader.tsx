@@ -14,12 +14,15 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/ui/dropdown-menu";
 import { fetcher } from "../app/actions";
+import LoginButton from "./LoginButton";
 
-// type UploaderProps = {
-//   onFileChange: (file: string | undefined) => void;
-// };
-
-export default function Uploader({ onFileChange }: any) {
+export default function Uploader({
+  // onFileChange,
+  userstat,
+}: {
+  // onFileChange: any;
+  userstat: any;
+}) {
   const [position, setPosition] = React.useState("20"); // state for dropdown menu
   const [name, changeName] = React.useState<File | null>(null);
   let [isPending, startTransition] = useTransition();
@@ -74,102 +77,117 @@ export default function Uploader({ onFileChange }: any) {
     <div className="grid w-full max-w-md items-right bg-white py-6 px-8 rounded-2xl font-mono text-sm text-background  shadow-2xl">
       <div className="grid w-full max-w-sm items-center gap-3.5 grid-cols-1">
         {/* create server action for submitting form data */}
+        {userstat ? (
+          <form
+            className="flex flex-col gap-4"
+            action={fetcher}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData();
+              if (name) {
+                formData.append("audioFile", name);
+              }
+              formData.append("position", position);
 
-        <form
-          className="flex flex-col gap-4"
-          action={fetcher}
-          onSubmit={(e) => {
-            e.preventDefault();
-            const formData = new FormData();
-            if (name) {
-              formData.append("audioFile", name);
-            }
-            formData.append("position", position);
+              // // Debugging: log the FormData values
+              // for (let [key, value] of formData.entries()) {
+              //   console.log(key, value);
+              // }
 
-            // // Debugging: log the FormData values
-            // for (let [key, value] of formData.entries()) {
-            //   console.log(key, value);
-            // }
+              // Debugging: log the file name and position
+              console.log("File:", name);
+              console.log("Position:", position);
 
-            // Debugging: log the file name and position
-            console.log("File:", name);
-            console.log("Position:", position);
+              startTransition(async () => {
+                await fetcher(formData);
+              });
+            }}
+          >
+            <div>
+              {userstat && (
+                <p className="text-black">Seconds Remaining: 100 </p>
+              )}
+            </div>
 
-            startTransition(async () => {
-              await fetcher(formData);
-            });
-          }}
-        >
-          {}
-          <div>
-            <Label htmlFor="picture" className="text-black">
-              Upload your song
-            </Label>{" "}
-            <Input
-              className="text-black border border-none rounded-half px-4 py-2 hover:bg-opacity-75 hover:bg-gray-300 hover:shadow"
-              id="audio"
-              accept="audio/*"
-              required
-              // value={name}
-              type="file"
-              onChange={(e) => {
-                console.log(e.target.files?.[0]); // File object containing the selected file from the file system
-                changeName(e.target.files?.[0] || null);
-              }}
-            />
-            <Label htmlFor="picture" className="text-gray-500 text-xs">
-              .wav or .mp3
-            </Label>
-          </div>
-          <div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="text-black">+10 seconds (1 credit) ▼</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>How much longer?</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={position}
-                  onValueChange={setPosition}
-                >
-                  <DropdownMenuRadioItem value="10">
-                    +10 seconds
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="20">
-                    +20 seconds
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="30">
-                    +30 seconds
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div>
-            <p></p>
-            <audio
-              id="song"
-              className="w-full max-w-md mx-auto"
-              controls
-              src={song || ""}
-            >
-              Your browser does not support the audio element.
-            </audio>
+            <div>
+              <Label htmlFor="picture" className="text-black">
+                Upload your song
+              </Label>{" "}
+              <Input
+                className="text-black border border-none rounded-half px-4 py-2 hover:bg-opacity-75 hover:bg-gray-300 hover:shadow"
+                id="audio"
+                accept="audio/*"
+                required
+                // value={name}
+                type="file"
+                onChange={(e) => {
+                  console.log(e.target.files?.[0]); // File object containing the selected file from the file system
+                  changeName(e.target.files?.[0] || null);
+                }}
+              />
+              <Label htmlFor="picture" className="text-gray-500 text-xs">
+                .wav or .mp3
+              </Label>
+            </div>
+            <div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="hover:bg-opacity-75 hover:bg-gray-300 hover:shadow text-black">
+                    {userstat
+                      ? `+${position} seconds (${position} credits) ▼`
+                      : "Please login to continue"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuLabel>How much longer?</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup
+                    value={position}
+                    onValueChange={setPosition}
+                  >
+                    <DropdownMenuRadioItem value="10">
+                      +10 seconds
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="20">
+                      +20 seconds
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="30">
+                      +30 seconds
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <div>
+              <p></p>
+              <audio
+                id="song"
+                className="w-full max-w-msd mx-auto"
+                controls
+                src={song || "./testaudio"}
+              >
+                Your browser does not support the audio element.
+              </audio>
 
-            <p className="text-black">
-              {name ? name + " uploaded successfully!" : ""}
-            </p>
-          </div>
-          <div className="flex justify-center items-center">
-            <button
-              type="submit"
-              className="btn text-black border border-black rounded-full px-4 py-2 hover:rainbow-shine"
-            >
-              Make my music longer!
-            </button>
-          </div>
-        </form>
+              <p className="text-black">
+                {name ? " Successful upload, submit track below!" : ""}
+              </p>
+            </div>
+            <div className="flex justify-center items-center">
+              <button
+                type="submit"
+                className="btn text-black border border-black rounded-full px-4 py-2 hover:rainbow-shine"
+              >
+                Make my music longer!
+              </button>
+            </div>
+          </form>
+        ) : (
+          <LoginButton
+            buttonText="Login with Google to Get Started"
+            imageSrc="/images/google-logo.png"
+          />
+        )}
       </div>
     </div>
   );
