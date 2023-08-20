@@ -1,4 +1,3 @@
-import Script from "next/script";
 import { FC } from "react";
 
 declare global {
@@ -7,24 +6,32 @@ declare global {
       "stripe-pricing-table": {
         "pricing-table-id": string;
         "publishable-key": string;
-        "client-reference-id"?: string;
+        "client-reference-id": string;
+        "customer-email": string;
       };
     }
   }
 }
-const pricingTableId = process.env.NEXT_PUBLIC_PRICING_TABLE_ID ?? "";
-const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
-
+const pricingTableId = process.env.NEXT_PUBLIC_PRICING_TABLE_ID as string;
+const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string;
 const NextStripePricingTable: FC<{
-  clientReferenceId?: string;
-}> = ({ clientReferenceId }) => {
-  // if (!pricingTableId || !publishableKey) return null;
+  clientReferenceId: string;
+  customerEmail: string;
+}> = ({ clientReferenceId, customerEmail }) => {
+  // Log the values
+  console.log("pricingTableId:", pricingTableId);
+  console.log("publishableKey:", publishableKey);
+  console.log("clientReferenceId:", clientReferenceId);
+  console.log("customerEmail:", customerEmail);
+
   return (
     <>
+      gay ass obi
       <stripe-pricing-table
         pricing-table-id={pricingTableId}
         publishable-key={publishableKey}
-        // client-reference-id={clientReferenceId}
+        client-reference-id={clientReferenceId}
+        customer-email={customerEmail}
       />
     </>
   );

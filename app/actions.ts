@@ -1,29 +1,25 @@
 "use server";
 
-export async function fetcher(formData: FormData) {
-  try {
-    // Assign the audioFile and position values to variables
-    const audioFile = formData.get("audioFile") as File;
-    const position = formData.get("position") as string;
+import {
+  createServerActionClient,
+  createServerComponentClient,
+} from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
-    console.log("audioFile:", audioFile);
-    console.log("position:", position);
+// export async function fetcher(formData: FormData) {
+//   try {
+//     // Assign the audioFile and position values to variables
 
-    // Process the audioFile and position variables for replicate api
+//   }
+// }
 
-    //  const response = await fetch("/api/process", {
-    //    method: "POST",
-    //    body: data,
-    //  });
-
-    // If processing was successful
-    return { success: true, message: "File processed successfully." };
-  } catch (error) {
-    // If there was an error
-    console.error(error);
-    return {
-      success: false,
-      message: "An error occurred while processing the file.",
-    };
-  }
-}
+export const sendGeneration = async (formData: FormData) => {
+  "use server";
+  console.log("console-------", formData);
+  // const title = formData.get("");
+  const supabase = createServerActionClient({ cookies });
+  // Get the user's session if there is one
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+};

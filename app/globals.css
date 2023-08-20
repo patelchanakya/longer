@@ -120,3 +120,44 @@
   background-color: transparent;
   font-weight: bold;
 }
+
+.rainbow-border {
+  border: 2px solid transparent;
+  border-image-slice: 1;
+  border-width: auto;
+  border-radius: 8px;
+  border-image-source: linear-gradient(
+    to right,
+    red,
+    orange,
+    yellow,
+    green,
+    blue,
+    indigo,
+    violet
+  );
+  border-image-repeat: repeat;
+  animation: rainbow-border 2s linear infinite;
+}
+@keyframes rainbow-border {
+  0% {
+    background-position: 0% 0%;
+    border-image-slice: 1;
+  }
+  25% {
+    background-position: 100% 0%;
+    border-image-slice: 2;
+  }
+  50% {
+    background-position: 100% 100%;
+    border-image-slice: 3;
+  }
+  75% {
+    background-position: 0% 100%;
+    border-image-slice: 2;
+  }
+  100% {
+    background-position: 0% 0%;
+    border-image-slice: 1;
+  }
+}
