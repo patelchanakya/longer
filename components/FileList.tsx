@@ -1,7 +1,4 @@
-"use client";
-
-// import { fetcher } from "../app/actions";
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
 
 type Item = {
   success: boolean;
@@ -10,18 +7,18 @@ type Item = {
   newPosition?: string; // change this to string
 };
 export default function FileList() {
-  const [data, setData] = useState<Item>();
+  // const [data, setData] = useState<Item>();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const formData = new FormData();
-      // set up formData as needed
-      //   const result = await fetcher(formData);
-      //   setData(result);
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const formData = new FormData();
+  //     // set up formData as needed
+  //     //   const result = await fetcher(formData);
+  //     //   setData(result);
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
 
   //   if (!data) {
   //     return null; // or a loading spinner
@@ -34,13 +31,14 @@ export default function FileList() {
         style={{ color: "darkslategray" }}
       >
         Your Files
+
+          
       </h2>
       {/* render loading audio */}
       <div className="flex flex-col gap-4">
         {/* {processedAudioFile && (processedAudioFile)} */}
         <div></div>
       </div>
-      [file list] --{data?.newPosition}
     </div>
   );
 }

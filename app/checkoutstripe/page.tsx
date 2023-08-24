@@ -19,14 +19,13 @@ const NextStripePricingTable: FC<{
   customerEmail: string;
 }> = ({ clientReferenceId, customerEmail }) => {
   // Log the values
-  console.log("pricingTableId:", pricingTableId);
-  console.log("publishableKey:", publishableKey);
-  console.log("clientReferenceId:", clientReferenceId);
-  console.log("customerEmail:", customerEmail);
+  // console.log("pricingTableId:", pricingTableId);
+  // console.log("publishableKey:", publishableKey);
+  // console.log("clientReferenceId:", clientReferenceId);
+  // console.log("customerEmail:", customerEmail);
 
   return (
     <>
-      gay ass obi
       <stripe-pricing-table
         pricing-table-id={pricingTableId}
         publishable-key={publishableKey}

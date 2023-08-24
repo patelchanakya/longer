@@ -6,24 +6,10 @@ import Link from "next/link";
 import LogoutButton from "../components/LogoutButton";
 
 import LoginButton from "../components/LoginButton";
-import Uploader from "../components/Uploader";
 import NextStripePricingTable from "./checkoutstripe/page";
 import { SharedClient } from "../components/SharedClient";
-// import
-// export const dynamic = "force-dynamic";
 
-// declare global {
-//   export namespace JSX {
-//     interface IntrinsicElements {
-//       "stripe-pricing-table": {
-//         "pricing-table-id": string;
-//         "publishable-key": string;
-//         "client-reference-id"?: string;
-//         "customerEmail"?: string;
-//       };
-//     }
-//   }
-// }
+
 const pricingTableId = process.env.NEXT_PUBLIC_PRICING_TABLE_ID as string;
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string;
 
@@ -34,18 +20,17 @@ export default async function Index() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  //match user to user_credits table
 
-  // Log the values
-  // get the users credits
-
-  // Determine the client-reference-id (e.g., user's email or another unique identifier)
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl) {
+    throw new Error("Please define the NEXT_PUBLIC_BASE_URL environment variable");
+  }
 
   return (
     <div className="w-full flex flex-col items-center">
       {/* navigation */}
 
-      <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
+      <nav className="w-full flex justify-center border-b border-b-foreground/10 h-12">
         <div className="w-full max-w-4xl flex justify-between items-center p-3 text-sm text-foreground">
           {/* Welcome text */}
           {user && (
@@ -55,19 +40,20 @@ export default async function Index() {
           )}
 
           {/* Login/Logout button */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-right p-4 ">
             {user ? (
               <>
                 <LogoutButton />
               </>
             ) : (
-              <LoginButton buttonText="Login" />
+              <div><LoginButton buttonText="Login" /></div>
+
             )}
           </div>
         </div>
       </nav>
       {/* header */}
-      <div className="animate-in flex flex-col items-center gap-3 opacity-0 max-w-4xl px-3 py-10 lg:py-14 text-foreground">
+      <div className="w-full animate-in flex flex-col items-center gap-3 opacity-0 max-w-4xl px-3 py-10 lg:py-14 text-foreground">
         <div className="flex flex-col items-center mb-2 lg:mb-4">
           <p className="btn2 font-bold text-6xl font-bold lg:text-6xl !leading-tight mx-auto max-w-xl text-center">
             Extend your music with generative AI
@@ -80,7 +66,7 @@ export default async function Index() {
         </div>
 
         {/* resources */}
-        {user && <SharedClient userSession={user} />}
+        {user ? <SharedClient userSession={user} /> : <LoginButton imageSrc="/images/google-logo.png" />}
 
         {/* Pricing */}
         <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />

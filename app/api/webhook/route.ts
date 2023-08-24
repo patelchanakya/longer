@@ -1,11 +1,11 @@
 import { Stripe } from "stripe";
 import { buffer } from "micro";
-import { redirect } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { cookies, headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/router";
 // import { headers } from "next/headers";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
@@ -16,9 +16,12 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET as string;
 const relevantEvents = new Set(["checkout.session.completed"]);
 
 export async function POST(request: Request) {
+
   const res = await request.text();
   const headersList = headers();
+
   console.log("req-----------------------", headersList);
+
   const sig = headersList.get("stripe-signature") as string;
 
   let stripeEvent: Stripe.Event;
@@ -26,55 +29,91 @@ export async function POST(request: Request) {
   try {
     if (!sig || !webhookSecret) return;
     stripeEvent = stripe.webhooks.constructEvent(res, sig, webhookSecret);
+    // return new Response(JSON.stringify({ error: 'Missing signature or webhook secret' }), { status: 400 });
+    console.log("stripeEvent-----------------------", stripeEvent);
   } catch (err: any) {
-    console.log(` Error message: ${err.message}`);
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+    console.error('Error constructing Stripe event:', err);
+    return new Response(JSON.stringify({ error: `Webhook Error: ${err.message}` }), { status: 400 });
   }
 
   if (relevantEvents.has(stripeEvent.type)) {
+    console.log("relevantEvents-----------------------", relevantEvents);
+
     try {
       switch (stripeEvent.type) {
         case "checkout.session.completed":
+          // const checkoutSess = stripeEvent.data.object as any;
+          //  // Fetch the line items for this session
           const checkoutSession = stripeEvent.data
             .object as Stripe.Checkout.Session;
 
-          console.log("checkoutSession---------", checkoutSession);
-
-          // once the checkout session is completed, we can associate a new user in the database
-          // const customer = await stripe.customers.create({ email: customerEmail });
+          const lineItems = await stripe.checkout.sessions.listLineItems(checkoutSession.id);
 
           const supabase = createServerComponentClient({ cookies });
           const customerEmail = checkoutSession.customer_email;
-          const clientref = checkoutSession.client_reference_id;
-          const amount = checkoutSession.amount_total;
 
-          // determine credits purchased based on amount
-          // if amount is 4, then 250 credit is purchased
-          if (amount == 4) {
-          }
 
-          // use clientref to get the user id of the user who just paid
-          // if first purchase, create a new row in user_credits table with the user id and the amount of credits purchased
-          // if not first purchase, update the row in user_credits table according to the user id and the amount of credits purchased (add to the existing amount of credits)
+          lineItems.data.forEach(async (lineItem) => {
+            const clientref = checkoutSession.client_reference_id;
+            let creditstoadd;
 
-          let { data: user_credits, error } = await supabase
-            .from("user_credits")
-            .select("id");
 
-          // Redirect the user to the homepage
-          break;
-        default:
-          throw new Error("Unhandled relevant event!");
+            if (lineItem.price) {
+              const amounttot = lineItem.amount_total;
+
+              let creditstoadd;
+
+              switch (amounttot) {
+                case 400:
+                  creditstoadd = 250; // update this value based on your logic
+                  break;
+                case 1000:
+                  creditstoadd = 500; // update this value based on your logic
+                  break;
+                case 2000:
+                  creditstoadd = 1000; // update this value based on your logic
+                  break;
+                case 5000:
+                  creditstoadd = 2000; // update this value based on your logic
+                  break;
+              }
+              let { data: curr_user_credits } = await supabase
+                .from('user_credits')
+                .select('credit_amount')
+                .eq('user_id', clientref)
+
+              let updatedCredits = 0;
+              if (curr_user_credits && curr_user_credits[0]) {
+                updatedCredits = creditstoadd + curr_user_credits[0].credit_amount as number;
+              }
+
+              const { error } = await supabase
+                .from('user_credits')
+                .update({ credit_amount: updatedCredits })
+                .eq('user_id', clientref)
+
+              if (error) {
+                console.error('Error updating user credits:', error);
+              }
+            }
+
+
+
+          });
       }
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      console.error('Error handling Stripe event:', error);
       return new Response(
-        "Webhook handler failed. View your nextjs function logs.",
+        JSON.stringify({
+          message: "Webhook handler failed. View your nextjs function logs.",
+          error: error.message,
+        }),
         {
-          status: 400,
+          status: 500,
         }
       );
     }
+    // return a response to acknowledge receipt of the event that payment was successful
+    return new Response(JSON.stringify({ received: true }));
   }
-  return new Response(JSON.stringify({ received: true }));
 }
