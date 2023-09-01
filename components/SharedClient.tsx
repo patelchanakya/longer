@@ -1,54 +1,41 @@
-
+'use client'
 import Uploader from "./Uploader";
-import FileList from "./FileList";
-import { User, createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { useRouter } from "next/navigation";
-// import { fetcher } from "../app/actions";
+import { createClientComponentClient, User } from "@supabase/auth-helpers-nextjs";
 
+
+import { FileList } from "../components/FileList";
+import { useState, useEffect } from "react";
 
 type SharedClientProps = {
   userSession: User;
 };
 
+export function SharedClient({ userSession }: SharedClientProps) {
+  const supabase = createClientComponentClient();
+  const [channel, setChannel] = useState(null);
 
 
-export async function SharedClient({ userSession }: SharedClientProps) {
-  "use server";
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/webhook`, { /* your request options */ });
-  // const responseText = await response.();
-  // console.log('Response text:', responseText);
+  useEffect(() => {
+    const channel = supabase.channel('realtime-longer') as any;
+    setChannel(channel);
+  }, []);
 
-
-  let data;
-  try {
-    // data = JSON.parse(responseText);
-  } catch (err) {
-    console.error('Error parsing response:', err);
-    data = null;
+  if (!channel) {
+    return null; // or some loading state
   }
-  console.log('rathy', data);
-
-  // if (data && data.paymentSuccessful) {
-  //   // Use the router to redirect the user
-  //   const router = useRouter();
-  //   router.push('/');
-  // }
-
-  const supabase = createServerComponentClient({ cookies });
-  const userId = userSession.id
-  console.log('---->', userId)
-
-  let { data: user_credits, error }: any = await supabase
-    .from('user_credits')
-    .select('credit_amount')
-    .eq('user_id', userId)
 
   return (
-    <div className="flex flex-col w-full gap-4 ">
+    <div className="flex flex-col w-full gap-3">
       {/* Other components */}
-      <Uploader userCredits={user_credits} />
-      <FileList />
+      <Uploader userSession={userSession} channel={channel} />
+      {/* <FileList /> */}
+      {/* files */}
+      <div className="w-full p-[1px] pt-[5px] mt-[5px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+
+      <h2 className="text-xl font-bold font-bold text-center" >
+        My Files
+      </h2>
+      <FileList userSession={userSession} />
     </div>
   );
 }

@@ -18,11 +18,6 @@ const NextStripePricingTable: FC<{
   clientReferenceId: string;
   customerEmail: string;
 }> = ({ clientReferenceId, customerEmail }) => {
-  // Log the values
-  // console.log("pricingTableId:", pricingTableId);
-  // console.log("publishableKey:", publishableKey);
-  // console.log("clientReferenceId:", clientReferenceId);
-  // console.log("customerEmail:", customerEmail);
 
   return (
     <>

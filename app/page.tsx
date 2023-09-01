@@ -9,7 +9,6 @@ import LoginButton from "../components/LoginButton";
 import NextStripePricingTable from "./checkoutstripe/page";
 import { SharedClient } from "../components/SharedClient";
 
-
 const pricingTableId = process.env.NEXT_PUBLIC_PRICING_TABLE_ID as string;
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string;
 
@@ -27,38 +26,38 @@ export default async function Index() {
   }
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="w-full justify-center flex flex-col items-center gap-7">
       {/* navigation */}
-
-      <nav className="w-full flex justify-center border-b border-b-foreground/10 h-12">
-        <div className="w-full max-w-4xl flex justify-between items-center p-3 text-sm text-foreground">
-          {/* Welcome text */}
-          {user && (
-            <p className="font-normal" style={{ color: "darkslategray" }}>
-              Welcome {user.email && user.email.split("@")[0]}!
-            </p>
-          )}
-
-          {/* Login/Logout button */}
-          <div className="flex items-center justify-right p-4 ">
-            {user ? (
-              <>
-                <LogoutButton />
-              </>
-            ) : (
-              <div><LoginButton buttonText="Login" /></div>
-
+      {user && (
+        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-12">
+          <div className="w-full max-w-4xl flex justify-between items-center p-4 text-sm text-foreground">
+            {/* Welcome text */}
+            {user && (
+              <p className="font-normal" style={{ color: "darkslategray" }}>
+                Welcome {user.email && user.email.split("@")[0]}!
+              </p>
             )}
+
+            {/* Login/Logout button */}
+            <div className="flex items-center">
+              {user ? (
+                <>
+                  <LogoutButton />
+                </>
+              ) : (
+                <div><LoginButton buttonText="Login" /></div>
+
+              )}
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>)}
       {/* header */}
       <div className="w-full animate-in flex flex-col items-center gap-3 opacity-0 max-w-4xl px-3 py-10 lg:py-14 text-foreground">
         <div className="flex flex-col items-center mb-2 lg:mb-4">
           <p className="btn2 font-bold text-6xl font-bold lg:text-6xl !leading-tight mx-auto max-w-xl text-center">
             Extend your music with generative AI
           </p>
-          <p className="text-l lg:text-2xl !leading-tight mx-auto max-w-xl text-center mb-5 ">
+          <p className="text-xl lg:text-xl !leading-tight mx-auto max-w-xl text-center mb-5 ">
             Upload your unique music piece, and let our system take care of the
             rest. Our platform can generate fresh and inspiring music that
             seamlessly continues your original work.
@@ -66,18 +65,31 @@ export default async function Index() {
         </div>
 
         {/* resources */}
-        {user ? <SharedClient userSession={user} /> : <LoginButton imageSrc="/images/google-logo.png" />}
+        <div className="flex flex-col mx-auto max-w-2xl text-foreground">
+          {user ? (
 
-        {/* Pricing */}
+            <SharedClient userSession={user} />
+          ) : (
+            <div className="flex flex-col items-center">
+              <div className="w-80 h-auto">
+                <LoginButton imageSrc="/images/google-logo.png" />
+              </div>
+
+            </div>
+          )}</div>
+
         <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
 
-        <div className="flex flex-col !leading-tight mx-auto max-w-xl text-center text-foreground">
+        {/* Pricing */}
+        <div className="flex flex-col !leading-tight mx-auto mt-[5px] max-w-xl text-center text-foreground">
+
           {user && user.email && (
             <h2
-              className="text-xl   text-black underline text-center"
-              style={{ color: "darkslategray" }}
+              className="text-l
+               underline text-center"
+            // style={{ color: "darkslategray" }}
             >
-              Buy more credits
+              Buy more seconds
             </h2>
           )}
           <p>
@@ -94,12 +106,7 @@ export default async function Index() {
         </div>
 
         <div>
-          {/* <stripe-pricing-table
-            pricing-table-id={pricingTableId}
-            publishable-key={publishableKey}
-            client-reference-id={clientReferenceId}
-            customerEmail={user.email}
-          ></stripe-pricing-table> */}
+
 
           {user && user.email && (
             <NextStripePricingTable
@@ -113,27 +120,29 @@ export default async function Index() {
 
         {/* created by / credits */}
 
-        <div className="flex flex-col justify-center text-center text-xs">
-          <p>
-            Created by{" "}
-            <Link
-              href="https://twitter.com/chanakyeah"
-              target="_blank"
-              className="font-bold"
-            >
-              @chanakyeah
-            </Link>
-          </p>
-          <p>
-            Powered by{" "}
-            <Link
-              href="https://arxiv.org/abs/2306.05284"
-              target="_blank"
-              className="font-bold"
-            >
-              FacebookResearch
-            </Link>
-          </p>
+        <div className="flex flex-col justify-center items-center text-center text-xs mt-auto">
+          <div className="flex flex-col justify-center">
+            <p>
+              Created by{" "}
+              <Link
+                href="https://twitter.com/chanakyeah"
+                target="_blank"
+                className="font-bold"
+              >
+                @chanakyeah
+              </Link>
+            </p>
+            <p>
+              Powered by{" "}
+              <Link
+                href="https://arxiv.org/abs/2306.05284"
+                target="_blank"
+                className="font-bold"
+              >
+                FacebookResearch
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
