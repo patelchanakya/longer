@@ -65,7 +65,7 @@ export default async function Index() {
         </div>
 
         {/* resources */}
-        <div className="flex flex-col mx-auto max-w-2xl text-foreground">
+        <div className="flex flex-col w-3/4 text-foreground">
           {user ? (
 
             <SharedClient userSession={user} />

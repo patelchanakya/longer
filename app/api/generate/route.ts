@@ -4,11 +4,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import fetch from "node-fetch";
+import Replicate from "replicate";
+// import ffmpeg from 'fluent-ffmpeg';
+
+import { Readable } from 'stream';
+
+import { Resend } from 'resend';
+
+
 
 // Function to upload a file to the 'masfiles' bucket and return the public URL
 async function uploadBucketFile(supabase: any, filePath: string, fileBuffer: Buffer, fileType: string): Promise<string> {
   // Convert the Buffer to a Blob
   const fileBlob = new Blob([fileBuffer], { type: fileType });
+
 
   // Upload the Blob to the 'masfiles' bucket
   const { data, error } = await supabase
@@ -29,19 +39,41 @@ async function uploadBucketFile(supabase: any, filePath: string, fileBuffer: Buf
   return publicUrl;
 }
 
-async function processFile(supabase: any, audioFileBlob: Blob, processedBucketFileName: string): Promise<string> {
+async function processFile(supabase: any, audioFileUrl: string, sliderValue: number, processedBucketFileName: string): Promise<string> {
+
+  const replicate = new Replicate({
+    auth: process.env.REPLICATE_API_TOKEN as any,
+  });
+
+  const output = await replicate.run(
+    "facebookresearch/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
+    {
+      input: {
+        model_version: "melody",
+        input_audio: audioFileUrl,
+        duration: sliderValue,
+        continuation: true,
+        seed: -1,
+      }
+    }
+  );
+
+  console.log('Prediction result:', JSON.stringify(output));
 
 
-  // Convert Blob to Buffer
-  const audioFileArrayBuffer = await audioFileBlob.arrayBuffer();
-  const audioFileBuffer = Buffer.from(audioFileArrayBuffer);
+  // Assuming output contains a URI to the processed audio file
+  const processedAudioFileUrl = (output as any);
 
-  // Upload the processed file (which is just the original file with a new name)
-  const processedFileUrl = await uploadBucketFile(supabase, processedBucketFileName, audioFileBuffer, audioFileBlob.type);
-  console.log('Processed file uploaded:', processedFileUrl);
-
-  // Return the URL of the processed file
-  return processedFileUrl;
+  // Download the processed audio file
+  const response = await fetch(processedAudioFileUrl);
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  console.log('Processed file downloaded', buffer.length);
+  // Upload the processed audio file to the 'masfiles' bucket
+  const uploadedFileUrl = await uploadBucketFile(supabase, processedBucketFileName, buffer, 'audio/wav');
+  console.log('Processed file uploaded', uploadedFileUrl);
+  // Return the URL of the uploaded file
+  return uploadedFileUrl;
 }
 
 async function insertRecord(supabase: any, userId: string, audioFileUrl: string, processedFileUrl: string, audioFileName: string, genFileName: string): Promise<any> {
@@ -62,7 +94,7 @@ async function insertRecord(supabase: any, userId: string, audioFileUrl: string,
   // Handle insert error
   if (error) {
     console.error('Error inserting record:', error);
-    return NextResponse.json({ success: false, message: `Error inserting record: ${error.message}` }, { status: 500 });
+    throw error;
   }
 
   // Return the inserted record
@@ -121,14 +153,18 @@ async function fetchUserFiles(supabase: any, userId: string): Promise<UserFile[]
 
   return userFiles;
 }
+const resend = new Resend('re_CSveQsr6_DVqdxB8TX2UDNBkxuwsaRsNp');
 
 export async function POST(request: NextRequest) {
   console.log('POST request received');
   const supabase = createServerActionClient({ cookies });
 
+
+
   // Get the current user's session
   const { data: { user } } = await supabase.auth.getUser();
   console.log('User session retrieved');
+
 
   // Check if the user is logged in
   if (!user) {
@@ -136,7 +172,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: 'Login first, sneaky hacker' }, { status: 401 });
   }
 
+
+
+
   const formData = await request.formData();
+  const rawAudioFile = formData.get("audio") as File; // Get the audio file from the form data
   const audioFileBlob = formData.get("audio") as Blob; // Get the audio file from the form data 
   const sliderValue = Number(formData.get("slider"));
   console.log('Form data parsed');
@@ -147,10 +187,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: 'No file selected. Please select a file.' }, { status: 400 });
   }
 
+
   // Convert Blob to Buffer
   const audioFileArrayBuffer = await audioFileBlob.arrayBuffer();
   const audioFileBuffer = Buffer.from(audioFileArrayBuffer);
   console.log('Blob converted to Buffer');
+
+  // Convert Buffer to Readable Stream
+  const audioFileStream = new Readable();
+  audioFileStream.push(audioFileBuffer);
+  audioFileStream.push(null);
+
 
   // Generate unique file names for the original audio file and the processed file
   const audioBucketFileName = `${user.id}/audio/${audioFileBlob.name}-${Date.now()}`;
@@ -166,7 +213,7 @@ export async function POST(request: NextRequest) {
   let record: any;
   let updatedFiles: any;
 
-  // Upload the original audio file
+  // Upload the audio file
   if (audioFileBuffer) {
     audioFileUrl = await uploadBucketFile(supabase, audioBucketFileName, audioFileBuffer, audioFileBlob.type);
     console.log('Original file uploaded:', audioFileUrl);
@@ -176,14 +223,26 @@ export async function POST(request: NextRequest) {
     console.log('Original file uploaded:', updatedCredits);
 
     // Process the file
-    processedFileUrl = await processFile(supabase, audioFileBlob, processedBucketFileName);
-    console.log('Processed file uploaded:', processedFileUrl);
+    processedFileUrl = await processFile(supabase, audioFileUrl, sliderValue, processedBucketFileName);
+    console.log('Processed file URL:', processedFileUrl);
 
     // Insert a record into the 'mas_generations' table
     record = await insertRecord(supabase, user.id, audioFileUrl, processedFileUrl, audioFileName, genFileName);
-    console.log('Record inserted:', record);
+
+
+
 
     try {
+      // if (user) {
+      //   const email = user.email;
+      //   resend.emails.send({
+      //     from: 'chanak12@gmail.com',
+      //     to: email!,
+      //     subject: 'Hello There from Continue.lol',
+      //     html: '<p>Congrats on your generation</p>'
+      //   });
+      // }
+
       // Fetch the updated list of user files
       updatedFiles = await fetchUserFiles(supabase, user.id);
       console.log('Updated files:', updatedFiles);

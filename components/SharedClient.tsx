@@ -25,7 +25,7 @@ export function SharedClient({ userSession }: SharedClientProps) {
   }
 
   return (
-    <div className="flex flex-col w-full gap-3">
+    <div className="flex flex-col w-auto gap-3">
       {/* Other components */}
       <Uploader userSession={userSession} channel={channel} />
       {/* <FileList /> */}

@@ -6,16 +6,21 @@ import { Slider } from "@/components/ui/ui/slider"
 import { useRouter } from 'next/navigation';
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import Loading from "./Loading";
 
 export const dynamic = 'force-dynamic'
 
 export default function Uploader({ userSession, channel }: { userSession: any, channel: any }) {
+
   console.log(userSession)
 
   const [sliderValue, setSliderValue] = React.useState(10); // Initial slider value
   const [isHovered, setIsHovered] = React.useState(false);
   const [song, setSong] = React.useState<File | undefined>(undefined);
   const [audioSrc, setAudioSrc] = React.useState<string | undefined>(undefined);
+
+  const [isLoading, setIsLoading] = React.useState(false); // Add isLoading state
+
 
   const supabase = createClientComponentClient({});
 
@@ -61,6 +66,9 @@ export default function Uploader({ userSession, channel }: { userSession: any, c
   const handleFormSubmission = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    setIsLoading(true); // Start loading
+
+
     const formData = new FormData();
     formData.append('audio', song as Blob);
     formData.append('slider', sliderValue.toString());
@@ -79,6 +87,8 @@ export default function Uploader({ userSession, channel }: { userSession: any, c
 
       const data = await response.json();
       // Handle the response data here
+      setIsLoading(false); // End loading
+
       console.log('File uploaded:', data);
       // Update the userCredits state with the updated credits from the response
       setUserCredits(data.updatedCredits);
@@ -121,7 +131,7 @@ export default function Uploader({ userSession, channel }: { userSession: any, c
   }, []);
 
   return (
-    <div className="w-auto items-center bg-white py-8 px-4 font-mono text-sm text-background shadow-2xl ">      <div className="max-w-2xl mx-auto"> {/* Add mx-auto class to center the div */}
+    <div className="w-auto items-center bg-white py-8 px-8 font-mono text-sm text-background shadow-2xl ">      <div className="max-w-2xl mx-auto"> {/* Add mx-auto class to center the div */}
       <div className="w-full max-w-2xl items-center grid-cols-1"> {/* create server action for submitting form data */}
         <p className="text-black py-1">Seconds remaining <b><u>{userCredits}s</u></b></p>
         {userSession && (
@@ -197,12 +207,12 @@ export default function Uploader({ userSession, channel }: { userSession: any, c
             {/* generate button */}
             <div className="btn text-black border border-black rounded-full px-4 py-2 hover:rainbow-shine"
             >
-              <button
-                type="submit"
-                className="btn-primary"
-              >
-                Generate
-              </button>
+              {isLoading ? (
+                <Loading />) : (
+                <button type="submit" className="btn-primary">
+                  Generate
+                </button>
+              )}
             </div>
           </form>
         )}

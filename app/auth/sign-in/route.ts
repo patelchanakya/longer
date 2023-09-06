@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const requestUrl = new URL(request.url)
   // createRouteHandlerClient is a function that takes the cookies to create a supabase client using nextjs auth helpers 
   const supabase = createRouteHandlerClient({ cookies })
-  
+
   // calls the signInWithOAuth method with supabase.auth object specifying the google provider and options
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -18,6 +18,8 @@ export async function POST(request: Request) {
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
+        // scope: 'https://www.googleapis.com/auth/business.manage',
+
       },
       // redirect to the callback route after the user signs in
       // be sure to add in google console as a authorized redirect uri 
@@ -29,9 +31,9 @@ export async function POST(request: Request) {
   if (error) {
 
     return NextResponse.redirect(
-      
+
       `${requestUrl.origin}/login?error=Could not authenticate user`,
-      
+
       {
         // a 301 status is required to redirect from a POST to a GET route
         status: 301,
