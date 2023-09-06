@@ -252,5 +252,5 @@ export async function POST(request: NextRequest) {
   }
 
   // Return a success response with the URLs of the uploaded files
-  // return NextResponse.json({ success: true, audioFileUrl, processedFileUrl, updatedCredits, updatedFiles });
+  return NextResponse.json({ success: true, audioFileUrl, processedFileUrl, updatedCredits, updatedFiles });
 };
