@@ -70,6 +70,7 @@ async function processFile(supabase: any, audioFileUrl: string, sliderValue: num
   // Upload the processed audio file to the 'masfiles' bucket
   const uploadedFileUrl = await uploadBucketFile(supabase, processedBucketFileName, buffer, 'audio/wav');
 
+  console.log('Processed file uploaded:', uploadedFileUrl);
   // Return the URL of the uploaded file
   return uploadedFileUrl;
 }
