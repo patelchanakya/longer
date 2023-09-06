@@ -4,10 +4,6 @@ const nextConfig = {
     serverActions: true,
   },
 
-  headers: {
-    'Cache-Control': 'no-store',
-  },
-
 };
 
 module.exports = nextConfig;

@@ -43,37 +43,50 @@ async function processFile(supabase: any, audioFileUrl: string, sliderValue: num
     auth: process.env.REPLICATE_API_TOKEN as any,
   });
 
-  const output = await replicate.run(
-    "facebookresearch/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
-    {
-      input: {
-        model_version: "melody",
-        input_audio: audioFileUrl,
-        duration: sliderValue,
-        continuation: true,
-        seed: -1,
+  return new Promise((resolve, reject) => {
+
+    // Start the long-running task in the "background"
+    replicate.run(
+      "facebookresearch/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
+      {
+        input: {
+          model_version: "melody",
+          input_audio: audioFileUrl,
+          duration: sliderValue,
+          continuation: true,
+          seed: -1,
+        }
       }
-    }
-  );
+    )
+      .then(output => {
+        console.log('Prediction result:', JSON.stringify(output));
 
-  console.log('Prediction result:', JSON.stringify(output));
+        // Assuming output contains a URI to the processed audio file
+        const processedAudioFileUrl = (output) as URL;
 
+        // Download the processed audio file
+        return fetch(processedAudioFileUrl);
+      })
+      .then(response => response.arrayBuffer())
+      .then(arrayBuffer => {
+        const buffer = Buffer.from(arrayBuffer);
+        return uploadBucketFile(supabase, processedBucketFileName, buffer, 'audio/wav');
+      })
+      .then(uploadedFileUrl => {
+        console.log('Processed file uploaded:', uploadedFileUrl);
+        // Resolve the Promise with the URL of the uploaded file
+        resolve(uploadedFileUrl);
+      })
+      .catch(error => {
+        console.error('Error during processing:', error);
+        // Reject the Promise with the error
+        reject(error);
+      });
+  });
 
-  // Assuming output contains a URI to the processed audio file
-  const processedAudioFileUrl = (output) as URL;
-
-  // Download the processed audio file
-  const response = await fetch(processedAudioFileUrl);
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  // Upload the processed audio file to the 'masfiles' bucket
-  const uploadedFileUrl = await uploadBucketFile(supabase, processedBucketFileName, buffer, 'audio/wav');
-
-  console.log('Processed file uploaded:', uploadedFileUrl);
-  // Return the URL of the uploaded file
-  return uploadedFileUrl;
-}
+  // // Immediately return a response
+  // return 'Processing started';
+};
 
 async function insertRecord(supabase: any, userId: string, audioFileUrl: string, processedFileUrl: string, audioFileName: string, genFileName: string): Promise<any> {
   const { error, data } = await supabase
@@ -151,6 +164,18 @@ async function fetchUserFiles(supabase: any, userId: string): Promise<UserFile[]
   }
 
   return userFiles;
+}
+async function updateRecord(supabase: any, recordId: string, processedFileUrl: string): Promise<any> {
+  const { error } = await supabase
+    .from('mas_generations')
+    .update({ gen_file: processedFileUrl })
+    .eq('id', recordId);
+
+  // Handle update error
+  if (error) {
+    console.error('Error updating record:', error);
+    throw error;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -250,6 +275,18 @@ export async function POST(request: NextRequest) {
     console.error('Error uploading files. Return to client.');
     return NextResponse.json({ success: false, message: `Error uploading files...` }, { status: 400 });
   }
+
+
+  // // Start the long-running task in the "background"
+  // processFile(supabase, audioFileUrl, sliderValue, processedBucketFileName)
+  //   .then(processedFileUrl => {
+  //     // Update the 'gen_file' in the 'mas_generations' table
+  //     return updateRecord(supabase, record.id, processedFileUrl);
+  //   })
+  //   .catch(error => {
+  //     console.error('Error during processing:', error);
+  //   });
+
 
   // Return a success response with the URLs of the uploaded files
   return NextResponse.json({ success: true, audioFileUrl, processedFileUrl, updatedCredits, updatedFiles });

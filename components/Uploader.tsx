@@ -4,10 +4,12 @@ import { Input } from "./ui/ui/input";
 import * as React from "react";
 import { Slider } from "@/components/ui/ui/slider"
 import { useRouter } from 'next/navigation';
+export const runtime = 'edge'; // 'nodejs' is the default
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Loading from "./Loading";
 
+// refresth the page after api replicate resp
 export const dynamic = 'force-dynamic'
 
 export default function Uploader({ userSession, channel }: { userSession: any, channel: any }) {
@@ -86,8 +88,10 @@ export default function Uploader({ userSession, channel }: { userSession: any, c
       }
 
       const data = await response.json();
+
       // Handle the response data here
       setIsLoading(false); // End loading
+      router.refresh()
 
       console.log('File uploaded:', data);
       // Update the userCredits state with the updated credits from the response
