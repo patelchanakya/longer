@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: 'Login first, sneaky hacker' }, { status: 401 });
   }
 
-  const audioContext = new AudioContext();
+  // const audioContext = new AudioContext();
 
 
   const formData = await request.formData();
