@@ -10,8 +10,6 @@ import Replicate from "replicate";
 
 import { Readable } from 'stream';
 
-import { Resend } from 'resend';
-
 
 
 // Function to upload a file to the 'masfiles' bucket and return the public URL
@@ -62,16 +60,16 @@ async function processFile(supabase: any, audioFileUrl: string, sliderValue: num
 
 
   // Assuming output contains a URI to the processed audio file
-  const processedAudioFileUrl = (output as any);
+  const processedAudioFileUrl = (output) as URL;
 
   // Download the processed audio file
   const response = await fetch(processedAudioFileUrl);
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  console.log('Processed file downloaded', buffer.length);
+
   // Upload the processed audio file to the 'masfiles' bucket
   const uploadedFileUrl = await uploadBucketFile(supabase, processedBucketFileName, buffer, 'audio/wav');
-  console.log('Processed file uploaded', uploadedFileUrl);
+
   // Return the URL of the uploaded file
   return uploadedFileUrl;
 }
@@ -153,7 +151,6 @@ async function fetchUserFiles(supabase: any, userId: string): Promise<UserFile[]
 
   return userFiles;
 }
-const resend = new Resend('re_CSveQsr6_DVqdxB8TX2UDNBkxuwsaRsNp');
 
 export async function POST(request: NextRequest) {
   console.log('POST request received');
@@ -166,13 +163,15 @@ export async function POST(request: NextRequest) {
   console.log('User session retrieved');
 
 
+
+
   // Check if the user is logged in
   if (!user) {
     console.log('User not logged in');
     return NextResponse.json({ success: false, message: 'Login first, sneaky hacker' }, { status: 401 });
   }
 
-
+  const audioContext = new AudioContext();
 
 
   const formData = await request.formData();
@@ -188,6 +187,10 @@ export async function POST(request: NextRequest) {
   }
 
 
+  // const command = ffmpeg();
+  // take the audio file and trim it to 5 seconds and create a new file
+
+
   // Convert Blob to Buffer
   const audioFileArrayBuffer = await audioFileBlob.arrayBuffer();
   const audioFileBuffer = Buffer.from(audioFileArrayBuffer);
@@ -197,6 +200,9 @@ export async function POST(request: NextRequest) {
   const audioFileStream = new Readable();
   audioFileStream.push(audioFileBuffer);
   audioFileStream.push(null);
+
+  // Pass the stream to ffmpeg
+  // command.input(audioFileStream);
 
 
   // Generate unique file names for the original audio file and the processed file
@@ -229,20 +235,7 @@ export async function POST(request: NextRequest) {
     // Insert a record into the 'mas_generations' table
     record = await insertRecord(supabase, user.id, audioFileUrl, processedFileUrl, audioFileName, genFileName);
 
-
-
-
     try {
-      // if (user) {
-      //   const email = user.email;
-      //   resend.emails.send({
-      //     from: 'chanak12@gmail.com',
-      //     to: email!,
-      //     subject: 'Hello There from Continue.lol',
-      //     html: '<p>Congrats on your generation</p>'
-      //   });
-      // }
-
       // Fetch the updated list of user files
       updatedFiles = await fetchUserFiles(supabase, user.id);
       console.log('Updated files:', updatedFiles);
@@ -258,5 +251,5 @@ export async function POST(request: NextRequest) {
   }
 
   // Return a success response with the URLs of the uploaded files
-  return NextResponse.json({ success: true, audioFileUrl, processedFileUrl, updatedCredits, updatedFiles });
+  // return NextResponse.json({ success: true, audioFileUrl, processedFileUrl, updatedCredits, updatedFiles });
 };
