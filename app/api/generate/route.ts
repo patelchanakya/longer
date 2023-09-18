@@ -231,8 +231,8 @@ export async function POST(request: NextRequest) {
     console.log("Updated user credits:", updatedCredits);
 
     const replicateWebhookUrl =
-      "https://660f-2607-fea8-4ee3-f100-cd4f-108d-f826-1aac.ngrok-free.app/api/replicate-webhook";
-
+      // "https://660f-2607-fea8-4ee3-f100-cd4f-108d-f826-1aac.ngrok-free.app/api/replicate-webhook";
+      "https://continue.lol/api/replicate-webhook";
     // Start the long-running task with the Replicate API
     const replicate = new Replicate({
       auth: process.env.REPLICATE_API_TOKEN as any,

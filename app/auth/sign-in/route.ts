@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       // },
       // redirect to the callback route after the user signs in
       // be sure to add in google console as a authorized redirect uri
-      redirectTo: `https://660f-2607-fea8-4ee3-f100-cd4f-108d-f826-1aac.ngrok-free.app/auth/callback`,
+      redirectTo: `https://continue.lol/auth/callback`,
     },
   });
 
