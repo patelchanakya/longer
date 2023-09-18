@@ -1,111 +1,65 @@
-'use server'
+"use server";
 
 // app/api/generate/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import fetch from "node-fetch";
 import Replicate from "replicate";
-// import ffmpeg from 'fluent-ffmpeg';
-
-import { Readable } from 'stream';
-
-
 
 // Function to upload a file to the 'masfiles' bucket and return the public URL
-async function uploadBucketFile(supabase: any, filePath: string, fileBuffer: Buffer, fileType: string): Promise<string> {
+async function uploadBucketFile(
+  supabase: any,
+  filePath: string,
+  fileBuffer: Buffer,
+  fileType: string
+): Promise<string> {
   // Convert the Buffer to a Blob
   const fileBlob = new Blob([fileBuffer], { type: fileType });
 
-
   // Upload the Blob to the 'masfiles' bucket
-  const { data, error } = await supabase
-    .storage
-    .from('masfiles')
+  const { data, error } = await supabase.storage
+    .from("masfiles")
     .upload(filePath, fileBlob, {
-      upsert: true
+      upsert: true,
     });
 
   // Handle file upload error
   if (error) {
-    console.error('Error uploading file:', error);
+    console.error("Error uploading file:", error);
     throw error;
   }
 
   // Get the public URL of the uploaded file
-  const { data: { publicUrl } } = await supabase.storage.from('masfiles').getPublicUrl(filePath);
+  const {
+    data: { publicUrl },
+  } = await supabase.storage.from("masfiles").getPublicUrl(filePath);
   return publicUrl;
 }
 
-async function processFile(supabase: any, audioFileUrl: string, sliderValue: number, processedBucketFileName: string): Promise<string> {
-
-  const replicate = new Replicate({
-    auth: process.env.REPLICATE_API_TOKEN as any,
-  });
-
-  return new Promise((resolve, reject) => {
-
-    // Start the long-running task in the "background"
-    replicate.run(
-      "facebookresearch/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
-      {
-        input: {
-          model_version: "melody",
-          input_audio: audioFileUrl,
-          duration: sliderValue,
-          continuation: true,
-          seed: -1,
-        }
-      }
-    )
-      .then(output => {
-        console.log('Prediction result:', JSON.stringify(output));
-
-        // Assuming output contains a URI to the processed audio file
-        const processedAudioFileUrl = (output) as URL;
-
-        // Download the processed audio file
-        return fetch(processedAudioFileUrl);
-      })
-      .then(response => response.arrayBuffer())
-      .then(arrayBuffer => {
-        const buffer = Buffer.from(arrayBuffer);
-        return uploadBucketFile(supabase, processedBucketFileName, buffer, 'audio/wav');
-      })
-      .then(uploadedFileUrl => {
-        console.log('Processed file uploaded:', uploadedFileUrl);
-        // Resolve the Promise with the URL of the uploaded file
-        resolve(uploadedFileUrl);
-      })
-      .catch(error => {
-        console.error('Error during processing:', error);
-        // Reject the Promise with the error
-        reject(error);
-      });
-  });
-
-  // // Immediately return a response
-  // return 'Processing started';
-};
-
-async function insertRecord(supabase: any, userId: string, audioFileUrl: string, processedFileUrl: string, audioFileName: string, genFileName: string): Promise<any> {
-  const { error, data } = await supabase
-    .from('mas_generations')
-    .insert([
-      {
-        audio_file: audioFileUrl,
-        audio_filename: audioFileName,
-        gen_filename: genFileName,
-        status: 'processed', // Or whatever status you want to set
-        gen_file: processedFileUrl,
-        created_at: new Date(),
-        user_id: userId
-      },
-    ]);
+async function insertRecord(
+  supabase: any,
+  userId: string,
+  audioFileUrl: string,
+  audioFileName: string,
+  genFileName: string,
+  taskId: string // Add this parameter
+): Promise<any> {
+  const { error, data } = await supabase.from("mas_generations").insert([
+    {
+      audio_file: audioFileUrl,
+      audio_filename: audioFileName,
+      gen_filename: genFileName,
+      status: "processing", // Set the status to 'processing'
+      task_id: taskId, // Add this field
+      created_at: new Date(),
+      user_id: userId,
+    },
+  ]);
 
   // Handle insert error
   if (error) {
-    console.error('Error inserting record:', error);
+    console.error("Error inserting record:", error);
     throw error;
   }
 
@@ -115,29 +69,33 @@ async function insertRecord(supabase: any, userId: string, audioFileUrl: string,
 
 async function getUserCredits(supabase: any, userId: string): Promise<number> {
   const { data: user_credits, error } = await supabase
-    .from('user_credits')
-    .select('credit_amount')
-    .eq('user_id', userId);
+    .from("user_credits")
+    .select("credit_amount")
+    .eq("user_id", userId);
 
   if (error) {
-    console.error('Error fetching user credits:', error);
+    console.error("Error fetching user credits:", error);
     throw error;
   }
 
   return user_credits[0].credit_amount;
 }
 
-async function deductCredits(supabase: any, userId: string, amount: number): Promise<number> {
+async function deductCredits(
+  supabase: any,
+  userId: string,
+  amount: number
+): Promise<number> {
   const currentCredits = await getUserCredits(supabase, userId);
   const newCredits = currentCredits - amount;
 
   const { error } = await supabase
-    .from('user_credits')
+    .from("user_credits")
     .update({ credit_amount: newCredits })
-    .eq('user_id', userId);
+    .eq("user_id", userId);
 
   if (error) {
-    console.error('Error updating user credits:', error);
+    console.error("Error updating user credits:", error);
     throw error;
   }
 
@@ -148,146 +106,207 @@ type UserFile = {
   gen_file: string;
 };
 
-async function fetchUserFiles(supabase: any, userId: string): Promise<UserFile[]> {
+async function fetchUserFiles(
+  supabase: any,
+  userId: string
+): Promise<UserFile[]> {
   const { data: userFiles, error } = await supabase
-    .from('mas_generations')
-    .select('gen_file')
-    .eq('user_id', userId);
+    .from("mas_generations")
+    .select("gen_file")
+    .eq("user_id", userId);
 
   if (error) {
-    console.error('Error fetching user files:', error);
+    console.error("Error fetching user files:", error);
     throw new Error(error.message);
   }
 
   if (!userFiles) {
-    throw new Error('No user files found');
+    throw new Error("No user files found");
   }
 
   return userFiles;
 }
-async function updateRecord(supabase: any, recordId: string, processedFileUrl: string): Promise<any> {
+async function updateRecord(
+  supabase: any,
+  recordId: string,
+  processedFileUrl: string
+): Promise<any> {
   const { error } = await supabase
-    .from('mas_generations')
+    .from("mas_generations")
     .update({ gen_file: processedFileUrl })
-    .eq('id', recordId);
+    .eq("id", recordId);
 
   // Handle update error
   if (error) {
-    console.error('Error updating record:', error);
+    console.error("Error updating record:", error);
     throw error;
   }
 }
 
+interface Task {
+  id: string;
+  // Include other properties of the task object here
+}
+
 export async function POST(request: NextRequest) {
-  console.log('POST request received');
+  console.log("POST request received");
   const supabase = createServerActionClient({ cookies });
 
-
-
   // Get the current user's session
-  const { data: { user } } = await supabase.auth.getUser();
-  console.log('User session retrieved');
-
-
-
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  console.log("User session retrieved");
 
   // Check if the user is logged in
   if (!user) {
-    console.log('User not logged in');
-    return NextResponse.json({ success: false, message: 'Login first, sneaky hacker' }, { status: 401 });
+    console.log("User not logged in");
+    return NextResponse.json(
+      { success: false, message: "Login first, sneaky hacker" },
+      { status: 401 }
+    );
   }
 
   // const audioContext = new AudioContext();
 
-
   const formData = await request.formData();
   const rawAudioFile = formData.get("audio") as File; // Get the audio file from the form data
-  const audioFileBlob = formData.get("audio") as Blob; // Get the audio file from the form data 
+  const audioFileBlob = formData.get("audio") as Blob; // Get the audio file from the form data
   const sliderValue = Number(formData.get("slider"));
-  console.log('Form data parsed');
+  console.log("Form data parsed");
 
   // Check if a file was selected
   if (!audioFileBlob || !audioFileBlob.name) {
-    console.log('No file selected');
-    return NextResponse.json({ success: false, message: 'No file selected. Please select a file.' }, { status: 400 });
+    console.log("No file selected");
+    return NextResponse.json(
+      { success: false, message: "No file selected. Please select a file." },
+      { status: 400 }
+    );
   }
-
 
   // const command = ffmpeg();
   // take the audio file and trim it to 5 seconds and create a new file
 
-
   // Convert Blob to Buffer
   const audioFileArrayBuffer = await audioFileBlob.arrayBuffer();
   const audioFileBuffer = Buffer.from(audioFileArrayBuffer);
-  console.log('Blob converted to Buffer');
+  console.log("Blob converted to Buffer");
 
   // Convert Buffer to Readable Stream
-  const audioFileStream = new Readable();
-  audioFileStream.push(audioFileBuffer);
-  audioFileStream.push(null);
+  // const audioFileStream = new Readable();
+  // audioFileStream.push(audioFileBuffer);
+  // audioFileStream.push(null);
 
   // Pass the stream to ffmpeg
   // command.input(audioFileStream);
 
-
   // Generate unique file names for the original audio file and the processed file
-  const audioBucketFileName = `${user.id}/audio/${audioFileBlob.name}-${Date.now()}`;
-  const processedBucketFileName = `${user.id}/processed/new-${audioFileBlob.name}-${Date.now()}`;
+  const audioBucketFileName = `${user.id}/audio/${
+    audioFileBlob.name
+  }-${Date.now()}`;
+  const processedBucketFileName = `${user.id}/processed/new-${
+    audioFileBlob.name
+  }-${Date.now()}`;
 
   let audioFileName = audioFileBlob.name;
   let genFileName = `generated-${audioFileBlob.name}`; // Or however you generate the name of the processed file
 
-
   let audioFileUrl: string;
   let processedFileUrl: string;
   let updatedCredits: number;
-  let record: any;
   let updatedFiles: any;
 
   // Upload the audio file
   if (audioFileBuffer) {
-    audioFileUrl = await uploadBucketFile(supabase, audioBucketFileName, audioFileBuffer, audioFileBlob.type);
-    console.log('Original file uploaded:', audioFileUrl);
+    audioFileUrl = await uploadBucketFile(
+      supabase,
+      audioBucketFileName,
+      audioFileBuffer,
+      audioFileBlob.type
+    );
+    console.log("Original file uploaded:", audioFileUrl);
 
     // Deduct the slider value from the user's credits
     updatedCredits = await deductCredits(supabase, user.id, sliderValue);
-    console.log('Original file uploaded:', updatedCredits);
+    console.log("Updated user credits:", updatedCredits);
 
-    // Process the file
-    processedFileUrl = await processFile(supabase, audioFileUrl, sliderValue, processedBucketFileName);
-    console.log('Processed file URL:', processedFileUrl);
+    const replicateWebhookUrl =
+      "https://660f-2607-fea8-4ee3-f100-cd4f-108d-f826-1aac.ngrok-free.app/api/replicate-webhook";
 
-    // Insert a record into the 'mas_generations' table
-    record = await insertRecord(supabase, user.id, audioFileUrl, processedFileUrl, audioFileName, genFileName);
+    // Start the long-running task with the Replicate API
+    const replicate = new Replicate({
+      auth: process.env.REPLICATE_API_TOKEN as any,
+    });
 
-    try {
-      // Fetch the updated list of user files
-      updatedFiles = await fetchUserFiles(supabase, user.id);
-      console.log('Updated files:', updatedFiles);
-    } catch (error) {
-      console.error('Error fetching updated user files:', error);
-      return NextResponse.json({ success: false, message: `Error fetching updated user files: ${error}` }, { status: 500 });
-    }
+    const prediction = (await replicate.predictions.create({
+      version:
+        "7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
+      input: {
+        model_version: "melody",
+        input_audio: audioFileUrl,
+        duration: sliderValue,
+        continuation: true,
+        seed: -1,
+      },
+      webhook: replicateWebhookUrl, // Replace with your actual webhook URL
+      webhook_events_filter: ["completed"],
+    })) as any;
 
-
-  } else {
-    console.error('Error uploading files. Return to client.');
-    return NextResponse.json({ success: false, message: `Error uploading files...` }, { status: 400 });
+    console.log("Prediction started:", prediction);
+    // Insert a record into the 'mas_generations' table with the task ID
+    await insertRecord(
+      supabase,
+      user.id,
+      audioFileUrl,
+      audioFileName,
+      genFileName,
+      prediction.id
+    );
+    // Immediately return a response with the task ID
+    return NextResponse.json({
+      success: true,
+      updatedCredits: updatedCredits,
+    }) as any;
   }
 
+  // // Insert a record into the 'mas_generations' table
+  // record = await insertRecord(
+  //   supabase,
+  //   user.id,
+  //   audioFileUrl,
+  //   processedFileUrl,
+  //   audioFileName,
+  //   genFileName
+  // );
 
-  // // Start the long-running task in the "background"
-  // processFile(supabase, audioFileUrl, sliderValue, processedBucketFileName)
-  //   .then(processedFileUrl => {
-  //     // Update the 'gen_file' in the 'mas_generations' table
-  //     return updateRecord(supabase, record.id, processedFileUrl);
-  //   })
-  //   .catch(error => {
-  //     console.error('Error during processing:', error);
-  //   });
+  //   try {
+  //     // Fetch the updated list of user files
+  //     updatedFiles = await fetchUserFiles(supabase, user.id);
+  //     console.log("Updated files:", updatedFiles);
+  //   } catch (error) {
+  //     console.error("Error fetching updated user files:", error);
+  //     return NextResponse.json(
+  //       {
+  //         success: false,
+  //         message: `Error fetching updated user files: ${error}`,
+  //       },
+  //       { status: 500 }
+  //     );
+  //   }
+  // } else {
+  //   console.error("Error uploading files. Return to client.");
+  //   return NextResponse.json(
+  //     { success: false, message: `Error uploading files...` },
+  //     { status: 400 }
+  //   );
+  // }
 
-
-  // Return a success response with the URLs of the uploaded files
-  return NextResponse.json({ success: true, audioFileUrl, processedFileUrl, updatedCredits, updatedFiles });
-};
+  // // Return a success response with the URLs of the uploaded files
+  // return NextResponse.json({
+  //   success: true,
+  //   audioFileUrl,
+  //   processedFileUrl,
+  //   updatedCredits,
+  //   updatedFiles,
+  // });
+}

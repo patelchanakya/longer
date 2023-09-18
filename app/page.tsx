@@ -19,10 +19,11 @@ export default async function Index() {
     data: { user },
   } = await supabase.auth.getUser();
 
-
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   if (!baseUrl) {
-    throw new Error("Please define the NEXT_PUBLIC_BASE_URL environment variable");
+    throw new Error(
+      "Please define the NEXT_PUBLIC_BASE_URL environment variable"
+    );
   }
 
   return (
@@ -45,12 +46,14 @@ export default async function Index() {
                   <LogoutButton />
                 </>
               ) : (
-                <div><LoginButton buttonText="Login" /></div>
-
+                <div>
+                  <LoginButton buttonText="Login" />
+                </div>
               )}
             </div>
           </div>
-        </nav>)}
+        </nav>
+      )}
       {/* header */}
       <div className="w-full animate-in flex flex-col items-center gap-3 opacity-0 max-w-4xl px-3 py-10 lg:py-14 text-foreground">
         <div className="flex flex-col items-center mb-2 lg:mb-4">
@@ -67,27 +70,25 @@ export default async function Index() {
         {/* resources */}
         <div className="flex flex-col w-3/4 text-foreground">
           {user ? (
-
             <SharedClient userSession={user} />
           ) : (
             <div className="flex flex-col items-center">
               <div className="w-80 h-auto">
                 <LoginButton imageSrc="/images/google-logo.png" />
               </div>
-
             </div>
-          )}</div>
+          )}
+        </div>
 
         <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
 
         {/* Pricing */}
         <div className="flex flex-col !leading-tight mx-auto mt-[5px] max-w-xl text-center text-foreground">
-
           {user && user.email && (
             <h2
               className="text-l
                underline text-center"
-            // style={{ color: "darkslategray" }}
+              // style={{ color: "darkslategray" }}
             >
               Buy more seconds
             </h2>
@@ -106,8 +107,6 @@ export default async function Index() {
         </div>
 
         <div>
-
-
           {user && user.email && (
             <NextStripePricingTable
               clientReferenceId={user.id}
