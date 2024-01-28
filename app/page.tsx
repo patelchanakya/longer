@@ -23,11 +23,9 @@ export default async function Index() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-
   const { data } = await supabase
     .from('mas_generations')
-    .select('gen_file');
+    .select('gen_file, audio_file'); // Include the audio_file in the select statement
   console.log(data); // Add this line
   let fileList = data || [];
 
@@ -101,7 +99,18 @@ export default async function Index() {
             <p className="text-white">Yes</p>
           )}
 
-          {fileList && <DisplayFront files={fileList.map((file: any) => file.gen_file)} />}
+          {fileList && fileList.map((file: any) => (
+            <div className="flex flex-row justify-center items-center gap-8 mb-4">
+              <div className="flex flex-col items-center">
+                <h3 className="text-lg font-semibold">Original Piece</h3>
+                <DisplayFront files={[file.audio_file]} />
+              </div>
+              <div className="flex flex-col items-center">
+                <h3 className="text-lg font-semibold">Generated Extension</h3>
+                <DisplayFront files={[file.gen_file]} />
+              </div>
+            </div>
+          ))}
 
 
 
