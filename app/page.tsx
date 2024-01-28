@@ -23,12 +23,12 @@ export default async function Index() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   const { data } = await supabase
     .from('mas_generations')
     .select('gen_file, audio_file'); // Include the audio_file in the select statement
   console.log(data); // Add this line
   let fileList = data || [];
-
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   if (!baseUrl) {
@@ -95,26 +95,27 @@ export default async function Index() {
 
         {/* Pricing */}
         <div className="flex flex-col !leading-tight mx-auto mt-[5px] max-w-xl text-center text-foreground">
-          {!fileList && (
-            <p className="text-white">Yes</p>
-          )}
 
-          {fileList && fileList.map((file: any) => (
-            <div className="flex flex-row justify-center items-center gap-8 mb-4">
-              <div className="flex flex-col items-center">
-                <h3 className="text-lg font-semibold">Original Piece</h3>
-                <DisplayFront files={[file.audio_file]} />
-              </div>
-              <div className="flex flex-col items-center">
-                <h3 className="text-lg font-semibold">Generated Extension</h3>
-                <DisplayFront files={[file.gen_file]} />
-              </div>
+          {!user && (
+            <div className="flex flex-col !leading-tight mx-auto mt-[5px] max-w-xl text-center text-foreground">
+              <h2 className="text-2xl font-bold mb-4">
+                Some Examples
+              </h2>
+
+              {fileList && fileList.map((file: any) => (
+                <div className="flex flex-col lg:flex-row justify-center items-center gap-1 lg:gap-8 mb-4">
+                  <div className="w-full lg:w-auto flex flex-col items-center">
+                    <h3 className="text-xs lg:text-sm font-semibold text-gray-500">Original Piece</h3>
+                    <DisplayFront files={[file.audio_file]} />
+                  </div>
+                  <div className="w-full lg:w-auto flex flex-col items-center">
+                    <h3 className="text-xs lg:text-sm font-semibold text-gray-500">Generated Extension</h3>
+                    <DisplayFront files={[file.gen_file]} />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-
-
-
-
+          )}
 
 
 
