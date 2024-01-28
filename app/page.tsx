@@ -4,13 +4,18 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import LogoutButton from "../components/LogoutButton";
-
+import { FileList } from "../components/FileList"
+import DisplayFront from "@/components/DisplayFront";
 import LoginButton from "../components/LoginButton";
 import NextStripePricingTable from "./checkoutstripe/page";
 import { SharedClient } from "../components/SharedClient";
+import FileSingle from "@/components/FileSingle";
 
 const pricingTableId = process.env.NEXT_PUBLIC_PRICING_TABLE_ID as string;
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string;
+
+let genFilesDisplay: any;
+
 
 export default async function Index() {
   const supabase = createServerComponentClient({ cookies });
@@ -18,6 +23,13 @@ export default async function Index() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+
+  const { data } = await supabase
+    .from('mas_generations')
+    .select('gen_file');
+  console.log(data); // Add this line
+  let fileList = data || [];
 
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -80,8 +92,22 @@ export default async function Index() {
 
         <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
 
+
+
+
         {/* Pricing */}
         <div className="flex flex-col !leading-tight mx-auto mt-[5px] max-w-xl text-center text-foreground">
+          {!fileList && (
+            <p className="text-white">Yes</p>
+          )}
+
+          {fileList && <DisplayFront files={fileList.map((file: any) => file.gen_file)} />}
+
+
+
+
+
+
 
           {user && user.email && (
             <h2
@@ -92,6 +118,7 @@ export default async function Index() {
               Buy more seconds
             </h2>
           )}
+
           <p>
             100% Satisfaction guaranteed, if you are not happy with your
             generation, please{" "}
@@ -145,6 +172,6 @@ export default async function Index() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

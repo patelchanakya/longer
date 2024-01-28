@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
 
 
   const formData = await request.formData();
-  const rawAudioFile = formData.get("audio") as File; // Get the audio file from the form data
+  // const rawAudioFile = formData.get("audio") as File; // Get the audio file from the form data
   const audioFileBlob = formData.get("audio") as Blob; // Get the audio file from the form data 
   const sliderValue = Number(formData.get("slider"));
   console.log('Form data parsed');
